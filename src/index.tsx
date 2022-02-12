@@ -1,4 +1,4 @@
-import { Text } from "@fluentui/react";
+import { Separator, Stack } from "@fluentui/react";
 import { initializeIcons } from '@fluentui/react/lib/Icons';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -11,9 +11,11 @@ initializeIcons();
 
 ReactDOM.render(
   <React.StrictMode>
-    <Text variant={"large"}>DenseEdia Web</Text>
-    <EdiaList />
-    <EdiumCreator />
+    <Stack tokens={{childrenGap: 10}}>
+      <EdiaList />
+      <Separator />
+      <EdiumCreator />
+    </Stack>
   </React.StrictMode>,
   document.getElementById('root')
 );

@@ -1,4 +1,4 @@
-import { Stack, Text } from "@fluentui/react";
+import { DefaultButton, Stack, Text } from "@fluentui/react";
 import React from "react";
 
 import { getAllEdia } from "../api/actions";
@@ -8,13 +8,30 @@ import { IEdium } from "../api/types";
 // Display a list of all edia
 export const EdiaList: React.FC = () => {
   const [allEdia, setAllEdia] = React.useState<IEdium[]>([]);
+  const [isFetching, setIsFetching] = React.useState(true);
+
+  function fetchEdia() {
+    setIsFetching(true);
+    getAllEdia().then(
+      edia => {
+        setAllEdia(edia);
+        setIsFetching(false);
+      },
+      err => {
+        setIsFetching(false);
+      });
+  }
 
   React.useEffect(() => {
-    getAllEdia().then(edia => setAllEdia(edia), err => undefined);
+    fetchEdia();
   }, []);
 
   return (
     <Stack>
+      <Stack horizontal verticalAlign={"center"} tokens={{childrenGap: 10}}>
+        <Text variant={"large"}>DenseEdia Web</Text>
+        <DefaultButton text={"Refresh"} disabled={isFetching} onClick={fetchEdia} />
+      </Stack>
       <table>
         <thead>
           <tr>
