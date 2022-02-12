@@ -1,6 +1,11 @@
 export interface IEdium {
   id: number;
   title: string;
-  kind: string | null;
+  kind: string;
   creation_date: string;
+}
+
+export interface IEdiumPost {
+  title: string;
+  kind?: string;
 }
