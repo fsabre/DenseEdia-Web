@@ -1,4 +1,4 @@
-import { PrimaryButton, Spinner, Stack, Text, TextField } from "@fluentui/react";
+import { mergeStyleSets, PrimaryButton, Spinner, Stack, Text, TextField } from "@fluentui/react";
 import React from "react";
 
 import { createOneEdium } from "../api/actions";
@@ -45,8 +45,8 @@ export const EdiumCreator: React.FC<IEdiumCreatorProps> = (props) => {
   }
 
   return (
-    <Stack tokens={{childrenGap: 10}}>
-      <Text variant={"large"}>Create an edium</Text>
+    <Stack tokens={{childrenGap: 20}}>
+      <Text variant={"large"} className={classes.title}>Create an edium</Text>
       <TextField
         label={"Title"}
         value={tmpEdium.title}
@@ -65,3 +65,9 @@ export const EdiumCreator: React.FC<IEdiumCreatorProps> = (props) => {
     </Stack>
   );
 };
+
+const classes = mergeStyleSets({
+  title: {
+    textAlign: "center",
+  },
+});
