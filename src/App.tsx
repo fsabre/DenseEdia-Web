@@ -10,6 +10,7 @@ import { EdiumCreator } from "./components/EdiumCreator";
 export const App: React.FC = () => {
   const [allEdia, setAllEdia] = React.useState<IEdium[]>([]);
   const [isLoadingEdia, setIsLoadingEdia] = React.useState(true);
+  const [selectedEdiumId, setSelectedEdiumId] = React.useState<number>(); // Undefined if nothing is selected
 
   function fetchEdia() {
     setIsLoadingEdia(true);
@@ -31,7 +32,13 @@ export const App: React.FC = () => {
   return (
     <Stack horizontal tokens={{childrenGap: 10}}>
       <Stack className={classes.half}>
-        <EdiaList edia={allEdia} isLoading={isLoadingEdia} onRefresh={() => fetchEdia()} />
+        <EdiaList
+          edia={allEdia}
+          isLoading={isLoadingEdia}
+          onRefresh={() => fetchEdia()}
+          selectedId={selectedEdiumId}
+          onSelect={newId => setSelectedEdiumId(newId)}
+        />
       </Stack>
       <Separator vertical />
       <Stack className={classes.half}>
