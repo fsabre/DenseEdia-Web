@@ -1,4 +1,4 @@
-import { IEdium, IEdiumPost } from "./types";
+import { IEdium, IEdiumPost, IElement } from "./types";
 
 
 const API_URL = "http://127.0.0.1:59130";
@@ -10,6 +10,10 @@ export function getAllEdia(): Promise<IEdium[]> {
 
 export function createOneEdium(data: IEdiumPost): Promise<IEdium> {
   return safePostRequest(API_URL + "/edium", data);
+}
+
+export function getAllElementsFromEdium(ediumId: number): Promise<IElement[]> {
+  return safeGetRequest(API_URL + `/edium/${ediumId}/elements?versions=single`);
 }
 
 function safeGetRequest(url: string): Promise<any> {
