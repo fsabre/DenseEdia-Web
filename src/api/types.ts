@@ -1,4 +1,5 @@
 export type ValueType = "none" | "bool" | "int" | "float" | "str" | "datetime";
+export type JsonValue = null | boolean | number | string;
 
 export interface IVersion {
   id: number;
@@ -6,7 +7,7 @@ export interface IVersion {
   creation_date: string;
   last: boolean;
   value_type: ValueType;
-  value_json: null | boolean | number | string;
+  value_json: JsonValue;
 }
 
 export interface IElement {

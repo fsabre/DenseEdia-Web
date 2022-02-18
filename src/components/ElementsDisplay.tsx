@@ -4,6 +4,24 @@ import React from "react";
 import { IElement, ValueType } from "../api/types";
 
 
+interface IElementDisplayProps {
+  elements: IElement[];
+}
+
+export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
+  return (
+    <Stack className={classes.elementList}>
+      <Text variant={"large"}>Elements</Text>
+      {props.elements.length === 0 && (
+        <Text>No element to show</Text>
+      )}
+      {props.elements.map(element => (
+        <SingleElement element={element} />
+      ))}
+    </Stack>
+  );
+};
+
 // Associate a border color to a value type
 const BORDER_COLORS: Map<ValueType | null, string> = new Map([
   ["none", "#37474F"], // Grey
@@ -15,37 +33,27 @@ const BORDER_COLORS: Map<ValueType | null, string> = new Map([
   [null, "lightgrey"],
 ]);
 
-interface IElementDisplayProps {
-  elements: IElement[];
+interface ISingleElementProps {
+  element: IElement;
 }
 
-export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
-  // Return the JSX code for one element
-  function renderElement(element: IElement): JSX.Element {
-    const version = element.versions.find(v => v.last);
-    const borderColor = BORDER_COLORS.get(version?.value_type ?? null);
+const SingleElement: React.FC<ISingleElementProps> = (props) => {
+  const element = props.element;
+  const version = element.versions.find(v => v.last);
+  const noVersion = version === undefined;
 
-    return (
-      <Stack key={element.id} horizontal className={classes.tile} style={{borderColor: borderColor}}>
-        <Text className={classes.nameLabel}>{element.name}</Text>
-        {version === undefined
-          ? <Text style={{color: "lightgrey"}}>No version yet</Text>
-          : (<>
-            <Text>{String(version.value_json)}</Text>
-            <Text style={{color: "lightgrey"}}>[{version.value_type}]</Text>
-          </>)
-        }
-      </Stack>
-    );
-  }
+  const borderColor = BORDER_COLORS.get(version?.value_type ?? null);
 
   return (
-    <Stack className={classes.elementList}>
-      <Text variant={"large"}>Elements</Text>
-      {props.elements.length === 0 && (
-        <Text>No element to show</Text>
+    <Stack key={element.id} className={classes.coloredBar} horizontal style={{borderColor: borderColor}}>
+      <Text className={classes.nameLabel}>{element.name}</Text>
+      {noVersion && (
+        <Text style={{color: "lightgrey"}}>No version yet</Text>
       )}
-      {props.elements.map(renderElement)}
+      {!noVersion && (<>
+        <Text>{String(version.value_json)}</Text>
+        <Text style={{color: "lightgrey"}}>[{version.value_type}]</Text>
+      </>)}
     </Stack>
   );
 };
@@ -54,7 +62,7 @@ const classes = mergeStyleSets({
   elementList: {
     gap: 10,
   },
-  tile: {
+  coloredBar: {
     padding: 10,
     justifyContent: "space-between",
     border: "1px solid lightgrey",
