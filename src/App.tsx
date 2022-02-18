@@ -6,6 +6,7 @@ import { IEdium, IElement } from "./api/types";
 import { EdiaList } from "./components/EdiaList";
 import { EdiumCreator } from "./components/EdiumCreator";
 import { ElementsDisplay } from "./components/ElementsDisplay";
+import { ErrorBar } from "./components/ErrorBar";
 
 
 export const App: React.FC = () => {
@@ -67,6 +68,7 @@ export const App: React.FC = () => {
         <Separator />
         <ElementsDisplay elements={allElements} />
       </Stack>
+      <ErrorBar/>
     </Stack>
   );
 };

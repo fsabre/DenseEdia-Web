@@ -1,8 +1,10 @@
 import { mergeStyleSets, PrimaryButton, Spinner, Stack, Text, TextField } from "@fluentui/react";
 import React from "react";
+import { useDispatch } from "react-redux";
 
 import { createOneEdium } from "../api/actions";
 import { IEdiumPost } from "../api/types";
+import { errorSlice } from "../reducers/errorSlice";
 
 
 interface ITmpEdium {
@@ -23,11 +25,10 @@ interface IEdiumCreatorProps {
 export const EdiumCreator: React.FC<IEdiumCreatorProps> = (props) => {
   const [tmpEdium, setTmpEdium] = React.useState<ITmpEdium>(DEFAULT_TMP_EDIUM);
   const [postRequestPending, setPostRequestPending] = React.useState(false);
-  const [errorMessage, setErrorMessage] = React.useState("");
+  const dispatch = useDispatch();
 
   function sendPostEdium(): void {
     const postData: IEdiumPost = {title: tmpEdium.title, kind: tmpEdium.kind};
-    setErrorMessage("");
     setPostRequestPending(true);
     createOneEdium(postData).then(
       data => {
@@ -38,7 +39,7 @@ export const EdiumCreator: React.FC<IEdiumCreatorProps> = (props) => {
         }
       },
       err => {
-        setErrorMessage(err.message);
+        dispatch(errorSlice.actions.pushError({text: err.message}));
         setPostRequestPending(false);
       },
     );
@@ -60,7 +61,6 @@ export const EdiumCreator: React.FC<IEdiumCreatorProps> = (props) => {
       <Stack horizontal verticalAlign={"center"} tokens={{childrenGap: 10}}>
         <PrimaryButton text={"Add"} disabled={postRequestPending} onClick={sendPostEdium} />
         {postRequestPending && <Spinner />}
-        {errorMessage && <Text styles={{root: {color: "red"}}}>{errorMessage}</Text>}
       </Stack>
     </Stack>
   );

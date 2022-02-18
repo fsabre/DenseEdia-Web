@@ -1,8 +1,10 @@
 import { IconButton, mergeStyleSets, Stack, Text, TextField, Toggle } from "@fluentui/react";
 import React from "react";
+import { useDispatch } from "react-redux";
 
 import { createOneVersion } from "../api/actions";
 import { IElement, IVersion, IVersionPost, JsonValue, ValueType } from "../api/types";
+import { errorSlice } from "../reducers/errorSlice";
 
 
 interface IElementDisplayProps {
@@ -44,6 +46,7 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
   const noVersion = version === undefined;
 
   const [tmpValue, setTmpValue] = React.useState<JsonValue>(version?.value_json ?? null);
+  const dispatch = useDispatch();
 
   const borderColor = BORDER_COLORS.get(version?.value_type ?? null);
 
@@ -58,7 +61,7 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
         console.log("Saved with success !");
       },
       err => {
-        console.log("Error when saving");
+        dispatch(errorSlice.actions.pushError({text: err.message}));
       },
     );
   }
