@@ -30,3 +30,8 @@ export interface IEdiumPost {
   title: string;
   kind?: string;
 }
+
+export interface IVersionPost {
+  value_type: ValueType;
+  value_json: JsonValue;
+}
