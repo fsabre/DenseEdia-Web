@@ -1,4 +1,13 @@
-import { IconButton, mergeStyleSets, Stack, Text, TextField, Toggle } from "@fluentui/react";
+import {
+  IButtonStyles,
+  IconButton,
+  IContextualMenuProps,
+  mergeStyleSets,
+  Stack,
+  Text,
+  TextField,
+  Toggle
+} from "@fluentui/react";
 import React from "react";
 import { useDispatch } from "react-redux";
 
@@ -31,7 +40,7 @@ const BORDER_COLORS: Map<ValueType | null, string> = new Map([
   ["bool", "#FF3D00"], // Red
   ["int", "#00B0FF"], // Light blue
   ["float", "#00C853"], // Light green
-  ["str", "#E040FB"], // Light purple
+  ["str", "#EA80FC"], // Light purple
   ["datetime", "#FDD835"], // Dark yellow
   [null, "lightgrey"],
 ]);
@@ -48,8 +57,7 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
   const [tmpValue, setTmpValue] = React.useState<JsonValue>(version?.value_json ?? null);
   const dispatch = useDispatch();
 
-  const borderColor = BORDER_COLORS.get(version?.value_type ?? null);
-
+  // Create a new version of the element with the tmpValue
   function onSave(): void {
     if (noVersion) {
       console.log("Trying to save when there's no version");
@@ -65,6 +73,28 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
       },
     );
   }
+
+  // Reset the tmpValue to be the props one
+  function onReset(): void {
+    setTmpValue(version?.value_json ?? null);
+  }
+
+  const borderColor = BORDER_COLORS.get(version?.value_type ?? null);
+  const saveButtonMenuProps: IContextualMenuProps = {
+    styles: {
+      root: {
+        border: `1px solid ${borderColor}`,
+      }
+    },
+    items: [
+      {
+        key: "reset",
+        text: "Reset",
+        iconProps: {iconName: "RevToggleKey"},
+        onClick: onReset,
+      },
+    ]
+  };
 
   // Return the right component to control the current data type
   function getContent(ver: IVersion): JSX.Element {
@@ -114,8 +144,11 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
       </Stack>
       <IconButton
         iconProps={{iconName: "Save"}}
-        disabled={tmpValue === version?.value_json}
+        primaryDisabled={tmpValue === version?.value_json}
         onClick={onSave}
+        split
+        menuProps={saveButtonMenuProps}
+        styles={saveButtonStyles}
       />
     </Stack>
   );
@@ -150,3 +183,19 @@ const classes = mergeStyleSets({
     width: "100%",
   },
 });
+
+const saveButtonStyles: IButtonStyles = {
+  rootDisabled: {
+    backgroundColor: "white", // Remove the grey background when the save button is disabled
+  },
+  iconDisabled: {
+    color: "lightgrey",
+  },
+  splitButtonMenuButton: {
+    border: "none",
+    backgroundColor: "white",
+  },
+  splitButtonDivider: {
+    backgroundColor: "grey", // Add a grey bar between the save icon and the menu button
+  },
+};
