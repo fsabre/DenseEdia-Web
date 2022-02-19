@@ -12,7 +12,7 @@ import React from "react";
 import { useDispatch } from "react-redux";
 
 import { createOneVersion } from "../api/actions";
-import { IElement, IVersion, IVersionPost, JsonValue, ValueType } from "../api/types";
+import { IElement, IVersionPost, JsonValue, ValueType } from "../api/types";
 import { errorSlice } from "../reducers/errorSlice";
 
 
@@ -34,8 +34,8 @@ export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
   );
 };
 
-// Associate a border color to a value type
-const BORDER_COLORS: Map<ValueType | null, string> = new Map([
+// Associate a color to a value type
+const TYPE_COLORS: Map<ValueType | null, string> = new Map([
   ["none", "#37474F"], // Grey
   ["bool", "#FF3D00"], // Red
   ["int", "#00B0FF"], // Light blue
@@ -54,16 +54,21 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
   const version = element.versions.find(v => v.last);
   const noVersion = version === undefined;
 
-  const [tmpValue, setTmpValue] = React.useState<JsonValue>(version?.value_json ?? null);
+  // Temporary value for edition
+  // JsonValue (null | boolean | number | string) or null if there's no version
+  const [tmpValue, setTmpValue] = React.useState<JsonValue>(noVersion ? null : version.value_json);
+  // Temporary type for edition
+  // ValueType or null if there's no version
+  const [tmpType, setTmpType] = React.useState<ValueType | null>(noVersion ? null : version?.value_type);
   const dispatch = useDispatch();
 
   // Create a new version of the element with the tmpValue
   function onSave(): void {
-    if (noVersion) {
+    if (tmpType === null) {
       console.log("Trying to save when there's no version");
       return;
     }
-    const postData: IVersionPost = {value_type: version.value_type, value_json: tmpValue};
+    const postData: IVersionPost = {value_type: tmpType, value_json: tmpValue};
     createOneVersion(element.id, postData).then(
       data => {
         console.log("Saved with success !");
@@ -76,14 +81,20 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
 
   // Reset the tmpValue to be the props one
   function onReset(): void {
-    setTmpValue(version?.value_json ?? null);
+    setTmpValue(noVersion ? null : version.value_json);
+    setTmpType(noVersion ? null : version.value_type);
   }
 
-  const borderColor = BORDER_COLORS.get(version?.value_type ?? null);
+  function onTypeChange(newType: ValueType): void {
+    setTmpValue(null);
+    setTmpType(newType);
+  }
+
+  const typeColor = TYPE_COLORS.get(tmpType);
   const saveButtonMenuProps: IContextualMenuProps = {
     styles: {
       root: {
-        border: `1px solid ${borderColor}`,
+        border: `1px solid ${typeColor}`,
       }
     },
     items: [
@@ -93,18 +104,68 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
         iconProps: {iconName: "RevToggleKey"},
         onClick: onReset,
       },
+      {
+        key: "changeType",
+        text: "Change type",
+        iconProps: {iconName: "LocationFill", styles: {root: {color: typeColor}}},
+        subMenuProps: {
+          styles: {
+            root: {
+              border: `1px solid ${typeColor}`,
+            }
+          },
+          items: [
+            {
+              key: "changeTypeToNone",
+              text: "To NONE",
+              iconProps: {iconName: "LocationFill", styles: {root: {color: TYPE_COLORS.get("none")}}},
+              onClick: () => onTypeChange("none"),
+            },
+            {
+              key: "changeTypeToBool",
+              text: "To BOOL",
+              iconProps: {iconName: "LocationFill", styles: {root: {color: TYPE_COLORS.get("bool")}}},
+              onClick: () => onTypeChange("bool"),
+            },
+            {
+              key: "changeTypeToInt",
+              text: "To INT",
+              iconProps: {iconName: "LocationFill", styles: {root: {color: TYPE_COLORS.get("int")}}},
+              onClick: () => onTypeChange("int"),
+            },
+            {
+              key: "changeTypeToFloat",
+              text: "To FLOAT",
+              iconProps: {iconName: "LocationFill", styles: {root: {color: TYPE_COLORS.get("float")}}},
+              onClick: () => onTypeChange("float"),
+            },
+            {
+              key: "changeTypeToStr",
+              text: "To STR",
+              iconProps: {iconName: "LocationFill", styles: {root: {color: TYPE_COLORS.get("str")}}},
+              onClick: () => onTypeChange("str"),
+            },
+            {
+              key: "changeTypeToDatetime",
+              text: "To DATETIME",
+              iconProps: {iconName: "LocationFill", styles: {root: {color: TYPE_COLORS.get("datetime")}}},
+              onClick: () => onTypeChange("datetime"),
+            },
+          ],
+        },
+      }
     ]
   };
 
   // Return the right component to control the current data type
-  function getContent(ver: IVersion): JSX.Element {
-    switch (ver.value_type) {
+  function getContent(): JSX.Element {
+    switch (tmpType) {
       case "none":
-        return <></>;
+        return <Text>{""}</Text>;
       case "bool":
         return (
           <Toggle
-            checked={Boolean(tmpValue)}
+            checked={tmpValue === true} // Expect null value
             onText={"True"}
             offText={"False"}
             onChange={(ev, val) => {
@@ -116,7 +177,7 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
       case "str":
         return (
           <TextField
-            value={String(tmpValue)}
+            value={String(tmpValue ?? "")} // Expect null value
             onChange={(ev, val) => {
               setTmpValue(val ?? "");
             }}
@@ -125,21 +186,22 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
           />
         );
       default:
-        return <Text>{String(ver.value_json)}</Text>;
+        return <Text>{String(tmpValue ?? "")}</Text>; // Expect null value
     }
   }
 
   return (
     <Stack className={classes.container} horizontal>
-      <Stack className={classes.coloredBar} horizontal style={{borderColor: borderColor}}>
+      <Stack className={classes.coloredBar} horizontal style={{borderColor: typeColor}}>
         <Text className={classes.nameLabel}>{element.name}</Text>
         {noVersion && (
           <Text style={{color: "lightgrey"}}>No version yet</Text>
         )}
         {!noVersion && (<>
           {/* Get the right component for the data type */}
-          {getContent(version)}
-          <Text style={{color: "lightgrey"}}>[{version.value_type}]</Text>
+          {getContent()}
+          {/* Display the type on the right */}
+          <Text style={{color: "lightgrey"}}>[{tmpType}]</Text>
         </>)}
       </Stack>
       <IconButton
