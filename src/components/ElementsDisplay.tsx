@@ -200,10 +200,10 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
     <Stack className={classes.container} horizontal>
       <Stack className={classes.coloredBar} horizontal style={{borderColor: typeColor}}>
         <Text className={classes.nameLabel}>{element.name}</Text>
-        {noVersion && (
+        {noVersion && tmpType === null && (
           <Text style={{color: "lightgrey"}}>No version yet</Text>
         )}
-        {!noVersion && (<>
+        {tmpType !== null && (<>
           {/* Get the right component for the data type */}
           {getContent()}
           {/* Display the type on the right */}
@@ -212,7 +212,7 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
       </Stack>
       <IconButton
         iconProps={{iconName: "Save"}}
-        primaryDisabled={tmpValue === version?.value_json}
+        primaryDisabled={tmpType === null || tmpValue === version?.value_json}
         onClick={onSave}
         split
         menuProps={saveButtonMenuProps}
