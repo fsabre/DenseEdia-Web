@@ -20,13 +20,17 @@ export function createOneElement(ediumId: number, data: IElementPost): Promise<I
   return safePostRequest(API_URL + `/edium/${ediumId}/element`, data);
 }
 
+export function deleteOneElement(elementId: number): Promise<IElement> {
+  return safeDeleteRequest(API_URL + `/element/${elementId}`);
+}
+
 export function createOneVersion(elementId: number, data: IVersionPost): Promise<IVersion> {
   return safePostRequest(API_URL + `/element/${elementId}/version`, data);
 }
 
 function safeGetRequest(url: string): Promise<any> {
   const request = fetch(url);
-  return safeRequest(request);
+  return makeRequestSafe(request);
 }
 
 function safePostRequest(url: string, data: any): Promise<any> {
@@ -37,11 +41,18 @@ function safePostRequest(url: string, data: any): Promise<any> {
     },
     body: JSON.stringify(data),
   });
-  return safeRequest(request);
+  return makeRequestSafe(request);
+}
+
+function safeDeleteRequest(url: string): Promise<any> {
+  const request = fetch(url, {
+    method: "delete",
+  });
+  return makeRequestSafe(request);
 }
 
 // Return the decoded JSON data, throw custom errors.
-async function safeRequest(request: Promise<Response>): Promise<any> {
+async function makeRequestSafe(request: Promise<Response>): Promise<any> {
   let response;
   let json;
   try {

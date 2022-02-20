@@ -12,7 +12,7 @@ import {
 import React from "react";
 import { useDispatch } from "react-redux";
 
-import { createOneElement, createOneVersion } from "../api/actions";
+import { createOneElement, createOneVersion, deleteOneElement } from "../api/actions";
 import { IElement, IElementPost, IVersionPost, JsonValue, ValueType } from "../api/types";
 import { errorSlice } from "../reducers/errorSlice";
 
@@ -83,6 +83,19 @@ export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
     );
   }
 
+  // Delete an element and all its versions
+  function onElementDelete(elementId: number): void {
+    deleteOneElement(elementId).then(
+      data => {
+        console.log("Element deleted with success !");
+        props.onRefresh();
+      },
+      err => {
+        dispatch(errorSlice.actions.pushError({text: err.message}));
+      },
+    );
+  }
+
   return (
     <Stack className={classes.elementList}>
       <Text variant={"large"}>Element list</Text>
@@ -99,17 +112,19 @@ export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
             initialValueType={version?.value_type ?? null}
             initialValueJson={version?.value_json ?? null}
             onSave={(valType, valJson) => onVersionCreate(element.id, valType, valJson)}
+            onDelete={() => onElementDelete(element.id)}
           />
         );
       })}
       {/* Create a line for each temporary element */}
-      {tmpElements.map((tmpElement, idx) => (
+      {tmpElements.map((tmpElement, tmpElementIdx) => (
         <SingleElement
-          key={idx}
+          key={tmpElementIdx}
           elementName={tmpElement.name}
           initialValueType={tmpElement.tmpType}
           initialValueJson={tmpElement.tmpValue}
           onSave={(valType, valJson) => onElementCreate(tmpElement.name, valType, valJson)}
+          onDelete={() => setTmpElements(tmpElements.filter((e, i) => i !== tmpElementIdx))}
         />
       ))}
       {/* Display the form to add a new element */}
@@ -148,6 +163,7 @@ interface ISingleElementProps {
   // The initial version value. Use null if there's no existing version.
   initialValueJson: JsonValue;
   onSave: (valueType: ValueType, valueJson: JsonValue) => void;
+  onDelete: () => void;
 }
 
 // Component to edit a real element or a temporary element.
@@ -187,6 +203,10 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
     } else {
       setTmpValue(null);
     }
+  }
+
+  function onDelete(): void {
+    props.onDelete();
   }
 
   const typeColor = TYPE_COLORS.get(tmpType);
@@ -258,7 +278,13 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
             },
           ],
         },
-      }
+      },
+      {
+        key: "delete",
+        text: "Delete",
+        iconProps: {iconName: "Delete"},
+        onClick: onDelete,
+      },
     ]
   };
 
