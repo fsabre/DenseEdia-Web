@@ -3,6 +3,7 @@ import {
   IconButton,
   IContextualMenuProps,
   mergeStyleSets,
+  PrimaryButton,
   Stack,
   Text,
   TextField,
@@ -11,25 +12,120 @@ import {
 import React from "react";
 import { useDispatch } from "react-redux";
 
-import { createOneVersion } from "../api/actions";
-import { IElement, IVersionPost, JsonValue, ValueType } from "../api/types";
+import { createOneElement, createOneVersion } from "../api/actions";
+import { IElement, IElementPost, IVersionPost, JsonValue, ValueType } from "../api/types";
 import { errorSlice } from "../reducers/errorSlice";
 
 
+interface ITmpElement {
+  name: string;
+  tmpType: ValueType | null;
+  tmpValue: JsonValue;
+}
+
+const DEFAULT_TMP_ELEMENT: ITmpElement = {
+  name: "",
+  tmpType: null,
+  tmpValue: null,
+};
+
+
 interface IElementDisplayProps {
+  ediumId: number;
   elements: IElement[];
+  onRefresh: () => void;
 }
 
 export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
+  const [tmpElements, setTmpElements] = React.useState<ITmpElement[]>([]);
+  const [tmpElementName, setTmpElementName] = React.useState("");
+  const dispatch = useDispatch();
+
+  // Empty the tmpElements when the data changes
+  React.useEffect(() => {
+    setTmpElements([]);
+  }, [props.elements]);
+
+  // Create a new temporary element displayed along the others
+  function onNewElement(): void {
+    setTmpElements([...tmpElements, {...DEFAULT_TMP_ELEMENT, name: tmpElementName}]);
+    setTmpElementName("");
+  }
+
+  // Create an new version for an existing element
+  function onVersionCreate(element_id: number, valueType: ValueType, valueJson: JsonValue): void {
+    const postData: IVersionPost = {value_type: valueType, value_json: valueJson};
+    createOneVersion(element_id, postData).then(
+      data => {
+        console.log("Version created with success !");
+        props.onRefresh();
+      },
+      err => {
+        dispatch(errorSlice.actions.pushError({text: err.message}));
+      },
+    );
+  }
+
+  // Create an new element and its version
+  function onElementCreate(element_name: string, valueType: ValueType, valueJson: JsonValue): void {
+    const postData: IElementPost = {
+      name: element_name,
+      version: {value_type: valueType, value_json: valueJson},
+    };
+    createOneElement(props.ediumId, postData).then(
+      data => {
+        console.log("Element created with success !");
+        props.onRefresh();
+      },
+      err => {
+        dispatch(errorSlice.actions.pushError({text: err.message}));
+      },
+    );
+  }
+
   return (
     <Stack className={classes.elementList}>
-      <Text variant={"large"}>Elements</Text>
+      <Text variant={"large"}>Element list</Text>
       {props.elements.length === 0 && (
         <Text>No element to show</Text>
       )}
-      {props.elements.map(element => (
-        <SingleElement key={element.id} element={element} />
+      {/* Create a line for each element of the edium */}
+      {props.elements.map(element => {
+        const version = element.versions.find(ver => ver.last);
+        return (
+          <SingleElement
+            key={element.id}
+            elementName={element.name}
+            initialValueType={version?.value_type ?? null}
+            initialValueJson={version?.value_json ?? null}
+            onSave={(valType, valJson) => onVersionCreate(element.id, valType, valJson)}
+          />
+        );
+      })}
+      {/* Create a line for each temporary element */}
+      {tmpElements.map((tmpElement, idx) => (
+        <SingleElement
+          key={idx}
+          elementName={tmpElement.name}
+          initialValueType={tmpElement.tmpType}
+          initialValueJson={tmpElement.tmpValue}
+          onSave={(valType, valJson) => onElementCreate(tmpElement.name, valType, valJson)}
+        />
       ))}
+      {/* Display the form to add a new element */}
+      <Text variant={"large"}>New element</Text>
+      <Stack className={classes.newElementBar} horizontal>
+        <TextField
+          value={tmpElementName}
+          placeholder={"Element name"}
+          onChange={(ev, val) => setTmpElementName(val ?? "")}
+        />
+        <PrimaryButton
+          text={"Add"}
+          disabled={tmpElementName === ""}
+          onClick={onNewElement}
+        />
+      </Stack>
     </Stack>
   );
 };
@@ -46,48 +142,51 @@ const TYPE_COLORS: Map<ValueType | null, string> = new Map([
 ]);
 
 interface ISingleElementProps {
-  element: IElement;
+  elementName: string;
+  // The initial version type. Use null if there's no existing version.
+  initialValueType: ValueType | null;
+  // The initial version value. Use null if there's no existing version.
+  initialValueJson: JsonValue;
+  onSave: (valueType: ValueType, valueJson: JsonValue) => void;
 }
 
+// Component to edit a real element or a temporary element.
 const SingleElement: React.FC<ISingleElementProps> = (props) => {
-  const element = props.element;
-  const version = element.versions.find(v => v.last);
-  const noVersion = version === undefined;
+  const noVersion = props.initialValueType === null;
 
-  // Temporary value for edition
-  // JsonValue (null | boolean | number | string) or null if there's no version
-  const [tmpValue, setTmpValue] = React.useState<JsonValue>(noVersion ? null : version.value_json);
-  // Temporary type for edition
-  // ValueType or null if there's no version
-  const [tmpType, setTmpType] = React.useState<ValueType | null>(noVersion ? null : version?.value_type);
-  const dispatch = useDispatch();
+  // Temporary type for edition. ValueType or null if there's no version.
+  const [tmpType, setTmpType] = React.useState<ValueType | null>(props.initialValueType);
+  // Temporary value for edition. JsonValue (null | boolean | number | string) or null if there's no version.
+  const [tmpValue, setTmpValue] = React.useState<JsonValue>(props.initialValueJson);
 
-  // Create a new version of the element with the tmpValue
+  // Send the tmpType and the tmpValue to create the version
   function onSave(): void {
     if (tmpType === null) {
       console.log("Trying to save when there's no version");
       return;
     }
-    const postData: IVersionPost = {value_type: tmpType, value_json: tmpValue};
-    createOneVersion(element.id, postData).then(
-      data => {
-        console.log("Saved with success !");
-      },
-      err => {
-        dispatch(errorSlice.actions.pushError({text: err.message}));
-      },
-    );
+    props.onSave(tmpType, tmpValue);
   }
 
-  // Reset the tmpValue to be the props one
+  // Reset the tmpType and the tmpValue to their initial state
   function onReset(): void {
-    setTmpValue(noVersion ? null : version.value_json);
-    setTmpType(noVersion ? null : version.value_type);
+    setTmpType(props.initialValueType);
+    setTmpValue(props.initialValueJson);
   }
 
+  // Change the tmpType and reset the tmpValue
   function onTypeChange(newType: ValueType): void {
-    setTmpValue(null);
     setTmpType(newType);
+    // For some reason, I can't do it properly with a Map<ValueType, JsonValue>.
+    if (newType === "bool") {
+      setTmpValue(false);
+    } else if (newType === "int" || newType === "float") {
+      setTmpValue(0);
+    } else if (newType === "str" || newType === "datetime") {
+      setTmpValue("");
+    } else {
+      setTmpValue(null);
+    }
   }
 
   const typeColor = TYPE_COLORS.get(tmpType);
@@ -196,10 +295,15 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
     }
   }
 
+  // Return true if there's no type, or if neither the type nor the value have changed
+  function isSaveButtonDisabled(): boolean {
+    return tmpType === null || (tmpType === props.initialValueType && tmpValue === props.initialValueJson);
+  }
+
   return (
     <Stack className={classes.container} horizontal>
       <Stack className={classes.coloredBar} horizontal style={{borderColor: typeColor}}>
-        <Text className={classes.nameLabel}>{element.name}</Text>
+        <Text className={classes.nameLabel}>{props.elementName}</Text>
         {noVersion && tmpType === null && (
           <Text style={{color: "lightgrey"}}>No version yet</Text>
         )}
@@ -212,7 +316,7 @@ const SingleElement: React.FC<ISingleElementProps> = (props) => {
       </Stack>
       <IconButton
         iconProps={{iconName: "Save"}}
-        primaryDisabled={tmpType === null || tmpValue === version?.value_json}
+        primaryDisabled={isSaveButtonDisabled()}
         onClick={onSave}
         split
         menuProps={saveButtonMenuProps}
@@ -249,6 +353,10 @@ const classes = mergeStyleSets({
   },
   strContent: {
     width: "100%",
+  },
+  newElementBar: {
+    gap: 10,
+    alignItems: "flex-end",
   },
 });
 

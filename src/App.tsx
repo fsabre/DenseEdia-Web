@@ -66,9 +66,15 @@ export const App: React.FC = () => {
       <Stack className={classes.remaining}>
         <EdiumCreator onCreate={() => fetchEdia()} />
         <Separator />
-        <ElementsDisplay elements={allElements} />
+        {(selectedEdiumId !== undefined) && (
+          <ElementsDisplay
+            ediumId={selectedEdiumId}
+            elements={allElements}
+            onRefresh={() => fetchElements()}
+          />
+        )}
       </Stack>
-      <ErrorBar/>
+      <ErrorBar />
     </Stack>
   );
 };
