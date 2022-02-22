@@ -23,6 +23,9 @@ const TYPE_COLORS: Map<ValueType | null, string> = new Map([
   [null, "lightgrey"],
 ]);
 
+const INT_REGEX = new RegExp("^-?[0-9]+$");
+const FLOAT_REGEX = new RegExp("^-?[0-9]+(\\.[0-9]+)?$");
+
 interface ISingleElementProps {
   elementName: string;
   // The initial version type. Use null if there's no existing version.
@@ -41,6 +44,7 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
   const [tmpType, setTmpType] = React.useState<ValueType | null>(props.initialValueType);
   // Temporary value for edition. JsonValue (null | boolean | number | string) or null if there's no version.
   const [tmpValue, setTmpValue] = React.useState<JsonValue>(props.initialValueJson);
+  const [rawNumberValue, setRawNumberValue] = React.useState(String(props.initialValueJson));
 
   // Send the tmpType and the tmpValue to create the version
   function onSave(): void {
@@ -55,6 +59,7 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
   function onReset(): void {
     setTmpType(props.initialValueType);
     setTmpValue(props.initialValueJson);
+    setRawNumberValue(String(props.initialValueJson));
   }
 
   // Change the tmpType and reset the tmpValue
@@ -65,6 +70,7 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
       setTmpValue(false);
     } else if (newType === "int" || newType === "float") {
       setTmpValue(0);
+      setRawNumberValue("0");
     } else if (newType === "str" || newType === "datetime") {
       setTmpValue("");
     } else {
@@ -76,9 +82,26 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
     props.onDelete();
   }
 
-  // Return true if there's no type, or if neither the type nor the value have changed
+  // Return true if the value is valid
+  function isValid(): boolean {
+    if (tmpType === null) {
+      return false;
+    }
+    // The trick here is super useful.
+    // It checks that the raw is well formatted and is not too big.
+    // But it's also not consistent, it needs to be changed.
+    if (tmpType === "int" && rawNumberValue !== String(tmpValue)) {
+      return false;
+    }
+    if (tmpType === "float" && rawNumberValue !== String(tmpValue)) {
+      return false;
+    }
+    return true;
+  }
+
+  // Return true if neither the type nor the value have changed, or if the value is not valid
   function isSaveButtonDisabled(): boolean {
-    return tmpType === null || (tmpType === props.initialValueType && tmpValue === props.initialValueJson);
+    return (tmpType === props.initialValueType && tmpValue === props.initialValueJson) || !isValid();
   }
 
   const typeColor = TYPE_COLORS.get(tmpType);
@@ -175,6 +198,34 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
               setTmpValue(val ?? false);
             }}
             className={classes.boolContent}
+          />
+        );
+      case "int":
+        return (
+          <TextField
+            value={rawNumberValue}
+            onChange={(ev, val) => {
+              setRawNumberValue(val ?? "");
+              if (INT_REGEX.test(val ?? "")) {
+                setTmpValue(Number(val ?? ""));
+              }
+            }}
+            borderless
+            className={classes.strContent}
+          />
+        );
+      case "float":
+        return (
+          <TextField
+            value={rawNumberValue}
+            onChange={(ev, val) => {
+              setRawNumberValue(val ?? "");
+              if (FLOAT_REGEX.test(val ?? "")) {
+                setTmpValue(Number(val ?? ""));
+              }
+            }}
+            borderless
+            className={classes.strContent}
           />
         );
       case "str":
