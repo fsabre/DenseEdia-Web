@@ -31,10 +31,34 @@ export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
   const [tmpElementName, setTmpElementName] = React.useState("");
   const dispatch = useDispatch();
 
-  // Empty the tmpElements when the data changes
+  // Empty the tmpElements when the ediumId changes
   React.useEffect(() => {
     setTmpElements([]);
+  }, [props.ediumId]);
+
+  // When the data is refreshed, remove the added elements from the tmpElements list
+  React.useEffect(() => {
+    // List of all the existing element names
+    const existingNames = props.elements.map(element => element.name);
+    setTmpElements(oldList => (
+      // Return a new list made of the ITmpElements that have not one of those names
+      oldList.filter(tmpElem => existingNames.indexOf(tmpElem.name) === -1)
+    ));
   }, [props.elements]);
+
+  // Return true is the input is empty or if the element name is already taken
+  function isAddButtonDisabled(): boolean {
+    if (tmpElementName === "") {
+      return true;
+    }
+    if (props.elements.find(element => element.name === tmpElementName) !== undefined) {
+      return true;
+    }
+    if (tmpElements.find(tmpElement => tmpElement.name === tmpElementName) !== undefined) {
+      return true;
+    }
+    return false;
+  }
 
   // Create a new temporary element displayed along the others
   function onNewElement(): void {
@@ -107,14 +131,14 @@ export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
         );
       })}
       {/* Create a line for each temporary element */}
-      {tmpElements.map((tmpElement, tmpElementIdx) => (
+      {tmpElements.map(tmpElement => (
         <SingleElement
-          key={tmpElementIdx}
+          key={tmpElement.name}
           elementName={tmpElement.name}
           initialValueType={tmpElement.tmpType}
           initialValueJson={tmpElement.tmpValue}
           onSave={(valType, valJson) => onElementCreate(tmpElement.name, valType, valJson)}
-          onDelete={() => setTmpElements(tmpElements.filter((e, i) => i !== tmpElementIdx))}
+          onDelete={() => setTmpElements(tmpElements.filter(e => e.name !== tmpElement.name))}
         />
       ))}
       {/* Display the form to add a new element */}
@@ -127,7 +151,7 @@ export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
         />
         <PrimaryButton
           text={"Add"}
-          disabled={tmpElementName === ""}
+          disabled={isAddButtonDisabled()}
           onClick={onNewElement}
         />
       </Stack>
