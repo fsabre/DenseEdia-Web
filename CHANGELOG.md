@@ -1,3 +1,15 @@
+# [0.2.0](https://github.com/fsabre/DenseEdia-Web/compare/0.1.0...0.2.0) (2022-02-24)
+
+
+### Bug Fixes
+
+* Don't lose other temporary elements on element save ([90655a7](https://github.com/fsabre/DenseEdia-Web/commit/90655a7826685a433acf929f10fd651100dbff87))
+
+
+### Features
+
+* Make the int/float elements editable ([fb2a288](https://github.com/fsabre/DenseEdia-Web/commit/fb2a288fed10ab458de6f911510683ee040e1a69))
+
 # [0.1.0](https://github.com/fsabre/DenseEdia-Web/compare/0.0.1...0.1.0) (2022-02-20)
 
 
