@@ -26,6 +26,14 @@ export interface IEdium {
   creation_date: string;
 }
 
+export interface ILink {
+  id: number;
+  start: number;
+  end: number;
+  directed: boolean;
+  label: string;
+}
+
 export interface IEdiumPost {
   title: string;
   kind?: string;

@@ -1,12 +1,13 @@
 import { mergeStyleSets, Separator, Stack } from "@fluentui/react";
 import React from "react";
 
-import { getAllEdia, getAllElementsFromEdium } from "./api/actions";
-import { IEdium, IElement } from "./api/types";
+import { getAllEdia, getAllElementsFromEdium, getAllLinksFromEdium } from "./api/actions";
+import { IEdium, IElement, ILink } from "./api/types";
 import { EdiaList } from "./components/EdiaList";
 import { EdiumInfo } from "./components/EdiumInfo";
 import { ElementsDisplay } from "./components/ElementsDisplay";
 import { ErrorBar } from "./components/ErrorBar";
+import { LinksDisplay } from "./components/LinksDisplay";
 
 
 export const App: React.FC = () => {
@@ -16,6 +17,7 @@ export const App: React.FC = () => {
   const [selectedEdium, setSelectedEdium] = React.useState<IEdium>(); // Undefined if nothing is selected
 
   const [allElements, setAllElements] = React.useState<IElement[]>([]);
+  const [allLinks, setAllLinks] = React.useState<ILink[]>([]);
 
   function fetchEdia() {
     setIsLoadingEdia(true);
@@ -43,6 +45,19 @@ export const App: React.FC = () => {
     );
   }, [selectedEdiumId]);
 
+  const fetchLinks: () => void = React.useCallback(() => {
+    if (selectedEdiumId === undefined) {
+      setAllLinks([]);
+      return;
+    }
+    getAllLinksFromEdium(selectedEdiumId).then(
+      links => {
+        setAllLinks(links);
+      },
+      err => undefined,
+    );
+  }, [selectedEdiumId]);
+
   React.useEffect(() => {
     fetchEdia();
   }, []);
@@ -57,7 +72,8 @@ export const App: React.FC = () => {
     }
     setSelectedEdium(edium);
     fetchElements();
-  }, [fetchElements, selectedEdiumId, allEdia]);
+    fetchLinks();
+  }, [fetchElements, fetchLinks, selectedEdiumId, allEdia]);
 
   return (
     <Stack horizontal tokens={{childrenGap: 10}}>
@@ -79,6 +95,13 @@ export const App: React.FC = () => {
             ediumId={selectedEdiumId}
             elements={allElements}
             onRefresh={() => fetchElements()}
+          />
+        )}
+        <Separator />
+        {(selectedEdiumId !== undefined) && (
+          <LinksDisplay
+            ediumId={selectedEdiumId}
+            links={allLinks}
           />
         )}
       </Stack>

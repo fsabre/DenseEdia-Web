@@ -1,4 +1,4 @@
-import { IEdium, IEdiumPatch, IEdiumPost, IElement, IElementPost, IVersion, IVersionPost } from "./types";
+import { IEdium, IEdiumPatch, IEdiumPost, IElement, IElementPost, ILink, IVersion, IVersionPost } from "./types";
 
 
 const API_URL = "http://127.0.0.1:59130";
@@ -34,6 +34,10 @@ export function deleteOneElement(elementId: number): Promise<IElement> {
 
 export function createOneVersion(elementId: number, data: IVersionPost): Promise<IVersion> {
   return safePostRequest(API_URL + `/element/${elementId}/version`, data);
+}
+
+export function getAllLinksFromEdium(ediumId: number): Promise<ILink[]> {
+  return safeGetRequest(API_URL + `/edium/${ediumId}/links`);
 }
 
 function safeGetRequest(url: string): Promise<any> {
