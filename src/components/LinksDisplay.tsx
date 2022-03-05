@@ -14,6 +14,9 @@ export const LinksDisplay: React.FC<ILinksDisplayProps> = (props) => {
   return (
     <Stack className={classes.linkList}>
       <Text variant={"large"}>Links</Text>
+      {props.links.length === 0 && (
+        <Text>No link to show</Text>
+      )}
       {props.links.map(link => (
         <SingleLink key={link.id} link={link} referenceEdiumId={props.ediumId} />
       ))}
