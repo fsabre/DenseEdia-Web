@@ -102,6 +102,8 @@ export const App: React.FC = () => {
           <LinksDisplay
             ediumId={selectedEdiumId}
             links={allLinks}
+            allEdia={allEdia}
+            onRefresh={() => fetchLinks()}
           />
         )}
       </Stack>

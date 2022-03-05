@@ -53,3 +53,10 @@ export interface IVersionPost {
   value_type: ValueType;
   value_json: JsonValue;
 }
+
+export interface ILinkPost {
+  start: number;
+  end: number;
+  directed: boolean;
+  label: string;
+}
