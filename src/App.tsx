@@ -4,7 +4,7 @@ import React from "react";
 import { getAllEdia, getAllElementsFromEdium } from "./api/actions";
 import { IEdium, IElement } from "./api/types";
 import { EdiaList } from "./components/EdiaList";
-import { EdiumCreator } from "./components/EdiumCreator";
+import { EdiumInfo } from "./components/EdiumInfo";
 import { ElementsDisplay } from "./components/ElementsDisplay";
 import { ErrorBar } from "./components/ErrorBar";
 
@@ -15,6 +15,8 @@ export const App: React.FC = () => {
   const [selectedEdiumId, setSelectedEdiumId] = React.useState<number>(); // Undefined if nothing is selected
 
   const [allElements, setAllElements] = React.useState<IElement[]>([]);
+
+  const selectedEdium: IEdium | undefined = allEdia.find(edium => edium.id === selectedEdiumId);
 
   function fetchEdia() {
     setIsLoadingEdia(true);
@@ -64,7 +66,7 @@ export const App: React.FC = () => {
       </Stack>
       <Separator vertical />
       <Stack className={classes.remaining}>
-        <EdiumCreator onCreate={() => fetchEdia()} />
+        <EdiumInfo edium={selectedEdium} onRefresh={() => fetchEdia()} />
         <Separator />
         {(selectedEdiumId !== undefined) && (
           <ElementsDisplay
