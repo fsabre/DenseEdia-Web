@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { createOneElement, createOneVersion, deleteOneElement } from "../api/actions";
 import { IElement, IElementPost, IVersionPost, JsonValue, ValueType } from "../api/types";
 import { errorSlice } from "../reducers/errorSlice";
-import { SingleElement } from "./SingleComponent";
+import { SingleElement } from "./SingleElement";
 
 
 interface ITmpElement {
