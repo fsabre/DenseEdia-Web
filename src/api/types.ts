@@ -31,6 +31,11 @@ export interface IEdiumPost {
   kind?: string;
 }
 
+export interface IEdiumPatch {
+  title?: string;
+  kind?: string;
+}
+
 export interface IElementPost {
   name: string;
   version: IVersionPost;

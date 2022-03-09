@@ -1,4 +1,4 @@
-import { IEdium, IEdiumPost, IElement, IElementPost, IVersion, IVersionPost } from "./types";
+import { IEdium, IEdiumPatch, IEdiumPost, IElement, IElementPost, IVersion, IVersionPost } from "./types";
 
 
 const API_URL = "http://127.0.0.1:59130";
@@ -10,6 +10,14 @@ export function getAllEdia(): Promise<IEdium[]> {
 
 export function createOneEdium(data: IEdiumPost): Promise<IEdium> {
   return safePostRequest(API_URL + "/edium", data);
+}
+
+export function modifyOneEdium(ediumId: number, data: IEdiumPatch): Promise<IEdium> {
+  return safePatchRequest(API_URL + `/edium/${ediumId}`, data);
+}
+
+export function deleteOneEdium(ediumId: number): Promise<IEdium> {
+  return safeDeleteRequest(API_URL + `/edium/${ediumId}`);
 }
 
 export function getAllElementsFromEdium(ediumId: number): Promise<IElement[]> {
@@ -36,6 +44,17 @@ function safeGetRequest(url: string): Promise<any> {
 function safePostRequest(url: string, data: any): Promise<any> {
   const request = fetch(url, {
     method: "post",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  return makeRequestSafe(request);
+}
+
+function safePatchRequest(url: string, data: any): Promise<any> {
+  const request = fetch(url, {
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
     },
