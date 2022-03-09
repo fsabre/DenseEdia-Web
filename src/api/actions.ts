@@ -16,6 +16,10 @@ export function modifyOneEdium(ediumId: number, data: IEdiumPatch): Promise<IEdi
   return safePatchRequest(API_URL + `/edium/${ediumId}`, data);
 }
 
+export function deleteOneEdium(ediumId: number): Promise<IEdium> {
+  return safeDeleteRequest(API_URL + `/edium/${ediumId}`);
+}
+
 export function getAllElementsFromEdium(ediumId: number): Promise<IElement[]> {
   return safeGetRequest(API_URL + `/edium/${ediumId}/elements?versions=single`);
 }

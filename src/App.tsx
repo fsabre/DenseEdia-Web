@@ -13,10 +13,9 @@ export const App: React.FC = () => {
   const [allEdia, setAllEdia] = React.useState<IEdium[]>([]);
   const [isLoadingEdia, setIsLoadingEdia] = React.useState(true);
   const [selectedEdiumId, setSelectedEdiumId] = React.useState<number>(); // Undefined if nothing is selected
+  const [selectedEdium, setSelectedEdium] = React.useState<IEdium>(); // Undefined if nothing is selected
 
   const [allElements, setAllElements] = React.useState<IElement[]>([]);
-
-  const selectedEdium: IEdium | undefined = allEdia.find(edium => edium.id === selectedEdiumId);
 
   function fetchEdia() {
     setIsLoadingEdia(true);
@@ -48,10 +47,17 @@ export const App: React.FC = () => {
     fetchEdia();
   }, []);
 
-  // Fetch the elements of the selected edium
+  // Fetch the data and elements of the selected edium
   React.useEffect(() => {
+    // Find the selected edium in all the stored edia
+    const edium = allEdia.find(edium => edium.id === selectedEdiumId);
+    if (edium === undefined) {
+      // If it's not found, reset the selected ID
+      setSelectedEdiumId(undefined);
+    }
+    setSelectedEdium(edium);
     fetchElements();
-  }, [fetchElements, selectedEdiumId]);
+  }, [fetchElements, selectedEdiumId, allEdia]);
 
   return (
     <Stack horizontal tokens={{childrenGap: 10}}>

@@ -1,8 +1,19 @@
-import { mergeStyleSets, PrimaryButton, Spinner, Stack, Text, TextField } from "@fluentui/react";
+import {
+  DefaultButton,
+  Dialog,
+  DialogFooter,
+  DialogType,
+  mergeStyleSets,
+  PrimaryButton,
+  Spinner,
+  Stack,
+  Text,
+  TextField
+} from "@fluentui/react";
 import React from "react";
 import { useDispatch } from "react-redux";
 
-import { createOneEdium, modifyOneEdium } from "../api/actions";
+import { createOneEdium, deleteOneEdium, modifyOneEdium } from "../api/actions";
 import { IEdium, IEdiumPatch, IEdiumPost } from "../api/types";
 import { errorSlice } from "../reducers/errorSlice";
 
@@ -28,6 +39,7 @@ interface IEdiumCreatorProps {
 export const EdiumInfo: React.FC<IEdiumCreatorProps> = (props) => {
   const [tmpEdium, setTmpEdium] = React.useState<ITmpEdium>(DEFAULT_TMP_EDIUM);
   const [postRequestPending, setPostRequestPending] = React.useState(false);
+  const [isDeleteDialogHidden, setIsDeleteDialogHidden] = React.useState(true);
   const dispatch = useDispatch();
 
   function sendPostEdium(): void {
@@ -65,12 +77,35 @@ export const EdiumInfo: React.FC<IEdiumCreatorProps> = (props) => {
     );
   }
 
+  function sendDeleteEdium(): void {
+    if (props.edium === undefined) {
+      console.warn("Can't delete an edium if no edium is selected");
+      return;
+    }
+    setPostRequestPending(true);
+    deleteOneEdium(props.edium.id).then(
+      data => {
+        setPostRequestPending(false);
+        props.onRefresh();
+      },
+      err => {
+        dispatch(errorSlice.actions.pushError({text: err.message}));
+        setPostRequestPending(false);
+      },
+    );
+  }
+
   function onSubmit(): void {
     if (props.edium === undefined) {
       sendPostEdium();
     } else {
       sendPatchEdium();
     }
+  }
+
+  function onDelete(): void {
+    setIsDeleteDialogHidden(true);
+    sendDeleteEdium();
   }
 
   // Update the tmp values if the edium has changed
@@ -101,6 +136,25 @@ export const EdiumInfo: React.FC<IEdiumCreatorProps> = (props) => {
           disabled={postRequestPending}
           onClick={onSubmit}
         />
+        <DefaultButton
+          text={"Delete the edium"}
+          disabled={postRequestPending || props.edium === undefined}
+          onClick={() => setIsDeleteDialogHidden(false)}
+        />
+        <Dialog
+          hidden={isDeleteDialogHidden}
+          onDismiss={() => setIsDeleteDialogHidden(true)}
+          dialogContentProps={{
+            type: DialogType.largeHeader,
+            title: "Delete an edium",
+            subText: "Are you sure to delete this edium, all its elements and related links ?",
+          }}
+        >
+          <DialogFooter>
+            <PrimaryButton onClick={onDelete} text="Delete" />
+            <DefaultButton onClick={() => setIsDeleteDialogHidden(true)} text="Cancel" />
+          </DialogFooter>
+        </Dialog>
         {postRequestPending && <Spinner />}
       </Stack>
     </Stack>
