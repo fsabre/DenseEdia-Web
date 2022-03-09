@@ -1,3 +1,11 @@
+# [0.3.0](https://github.com/fsabre/DenseEdia-Web/compare/0.2.0...0.3.0) (2022-03-09)
+
+
+### Features
+
+* Add a way to delete an edium ([0a6f615](https://github.com/fsabre/DenseEdia-Web/commit/0a6f61515eb091cc88fd2d4d18bdaf779dc764a4))
+* Add a way to modify edium title/kind ([54afa99](https://github.com/fsabre/DenseEdia-Web/commit/54afa99f5bf1853ee73b0da95d01a5dcf9cb41fe))
+
 # [0.2.0](https://github.com/fsabre/DenseEdia-Web/compare/0.1.0...0.2.0) (2022-02-24)
 
 
