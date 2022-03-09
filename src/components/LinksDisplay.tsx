@@ -10,7 +10,7 @@ import {
 } from "@fluentui/react";
 import React from "react";
 import { useDispatch } from "react-redux";
-import { createOneLink } from "../api/actions";
+import { createOneLink, deleteOneLink } from "../api/actions";
 
 import { IEdium, ILink, ILinkPost } from "../api/types";
 import { errorSlice } from "../reducers/errorSlice";
@@ -88,6 +88,19 @@ export const LinksDisplay: React.FC<ILinksDisplayProps> = (props) => {
     );
   }
 
+  // Delete a link
+  function sendDeleteLink(linkId: number): void {
+    deleteOneLink(linkId).then(
+      data => {
+        console.log("Link deleted with success !");
+        props.onRefresh();
+      },
+      err => {
+        dispatch(errorSlice.actions.pushError({text: err.message}));
+      },
+    );
+  }
+
   return (
     <Stack className={classes.linkList}>
       <Text variant={"large"}>Links</Text>
@@ -95,7 +108,12 @@ export const LinksDisplay: React.FC<ILinksDisplayProps> = (props) => {
         <Text>No link to show</Text>
       )}
       {props.links.map(link => (
-        <SingleLink key={link.id} link={link} referenceEdiumId={props.ediumId} />
+        <SingleLink
+          key={link.id}
+          link={link}
+          referenceEdiumId={props.ediumId}
+          onDelete={() => sendDeleteLink(link.id)}
+        />
       ))}
       <Text variant={"large"}>New link</Text>
       <Stack horizontal className={classes.newLinkContainer}>

@@ -1,16 +1,8 @@
-import {
-  IButtonStyles,
-  IconButton,
-  IContextualMenuProps,
-  mergeStyleSets,
-  Stack,
-  Text,
-  TextField,
-  Toggle
-} from "@fluentui/react";
+import { IContextualMenuProps, mergeStyleSets, Stack, Text, TextField, Toggle } from "@fluentui/react";
 import React from "react";
 
 import { JsonValue, ValueType } from "../api/types";
+import { SaveSplitButton } from "./SaveSplitButton";
 
 // Associate a color to a value type
 const TYPE_COLORS: Map<ValueType | null, string> = new Map([
@@ -258,32 +250,13 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
           <Text style={{color: "lightgrey"}}>[{tmpType}]</Text>
         </>)}
       </Stack>
-      <IconButton
-        iconProps={{iconName: "Save"}}
+      <SaveSplitButton
         primaryDisabled={isSaveButtonDisabled()}
-        onClick={onSave}
-        split
+        onSave={onSave}
         menuProps={saveButtonMenuProps}
-        styles={saveButtonStyles}
       />
     </Stack>
   );
-};
-
-const saveButtonStyles: IButtonStyles = {
-  rootDisabled: {
-    backgroundColor: "white", // Remove the grey background when the save button is disabled
-  },
-  iconDisabled: {
-    color: "lightgrey",
-  },
-  splitButtonMenuButton: {
-    border: "none",
-    backgroundColor: "white",
-  },
-  splitButtonDivider: {
-    backgroundColor: "grey", // Add a grey bar between the save icon and the menu button
-  },
 };
 
 const classes = mergeStyleSets({
