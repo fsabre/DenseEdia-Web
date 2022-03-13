@@ -23,6 +23,7 @@ const DEFAULT_TMP_ELEMENT: ITmpElement = {
 
 interface IElementDisplayProps {
   ediumId: number;
+  ediumKind?:string;
   elements: IElement[];
   onRefresh: () => void;
 }
@@ -157,6 +158,7 @@ export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
         hide={() => setIsAddDialogHidden(true)}
         isElementNameValid={isNewElementNameValid}
         onElementAdd={onNewElement}
+        ediumKind={props.ediumKind}
       />
     </Stack>
   );
