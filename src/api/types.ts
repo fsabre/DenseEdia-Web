@@ -26,6 +26,14 @@ export interface IEdium {
   creation_date: string;
 }
 
+export interface ILink {
+  id: number;
+  start: number;
+  end: number;
+  directed: boolean;
+  label: string;
+}
+
 export interface IEdiumPost {
   title: string;
   kind?: string;
@@ -44,4 +52,11 @@ export interface IElementPost {
 export interface IVersionPost {
   value_type: ValueType;
   value_json: JsonValue;
+}
+
+export interface ILinkPost {
+  start: number;
+  end: number;
+  directed: boolean;
+  label: string;
 }
