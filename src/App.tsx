@@ -93,6 +93,7 @@ export const App: React.FC = () => {
         {(selectedEdiumId !== undefined) && (
           <ElementsDisplay
             ediumId={selectedEdiumId}
+            ediumKind={selectedEdium?.kind}
             elements={allElements}
             onRefresh={() => fetchElements()}
           />

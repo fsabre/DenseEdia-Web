@@ -1,38 +1,13 @@
-import {
-  DefaultButton,
-  Dropdown,
-  IDropdownOption,
-  mergeStyleSets,
-  PrimaryButton,
-  Stack,
-  Text,
-  TextField
-} from "@fluentui/react";
+import { CommandBar, ICommandBarItemProps, mergeStyleSets, Stack, Text } from "@fluentui/react";
 import React from "react";
 import { useDispatch } from "react-redux";
 import { createOneLink, deleteOneLink } from "../api/actions";
 
 import { IEdium, ILink, ILinkPost } from "../api/types";
 import { errorSlice } from "../reducers/errorSlice";
+import { AddLinkDialog, ITmpLink } from "./AddLinkDialog";
 import { SingleLink } from "./SingleLink";
 
-
-function nextArrow(current: string): string {
-  switch (current) {
-    case "→":
-      return "←";
-    case "←":
-      return "↔";
-    default:
-      return "→";
-  }
-}
-
-const DEFAULT_TMP_LINK = {
-  label: "",
-  direction: nextArrow(""),
-  other: undefined,
-};
 
 interface ILinksDisplayProps {
   ediumId: number;
@@ -42,40 +17,29 @@ interface ILinksDisplayProps {
 }
 
 export const LinksDisplay: React.FC<ILinksDisplayProps> = (props) => {
-  const [tmpLabel, setTmpLabel] = React.useState(DEFAULT_TMP_LINK.label);
-  const [tmpDirection, setTmpDirection] = React.useState(DEFAULT_TMP_LINK.direction);
-  const [tmpOther, setTmpOther] = React.useState<number | undefined>(DEFAULT_TMP_LINK.other);
+  const [isAddDialogHidden, setIsAddDialogHidden] = React.useState(true);
   const dispatch = useDispatch();
 
-  const ediaOptions: IDropdownOption[] = React.useMemo(() => {
-    return props.allEdia.map(edium => ({
-      key: edium.id,
-      text: `Edium n°${edium.id} : ${edium.title} (${edium.kind})`,
-    }));
-  }, [props.allEdia]);
-
-  function isInputValid(): boolean {
-    return tmpLabel !== "" && tmpOther !== undefined;
-  }
-
-  function onNewLink(): void {
-    setTmpLabel(DEFAULT_TMP_LINK.label);
-    setTmpDirection(DEFAULT_TMP_LINK.direction);
-    setTmpOther(DEFAULT_TMP_LINK.other);
-    sendPostLink();
-  }
+  const barItems: ICommandBarItemProps[] = [
+    {
+      key: 'newElement',
+      text: 'New',
+      iconProps: {iconName: 'Add'},
+      onClick: () => setIsAddDialogHidden(false),
+    },
+  ];
 
   // Create a new link
-  function sendPostLink(): void {
-    if (tmpOther === undefined) {
+  function sendPostLink(newLink: ITmpLink): void {
+    if (newLink.other === undefined) {
       console.warn("Can't create a link if no other edium is selected");
       return;
     }
     const postData: ILinkPost = {
-      start: tmpDirection === "←" ? tmpOther : props.ediumId,
-      end: tmpDirection === "←" ? props.ediumId : tmpOther,
-      directed: tmpDirection !== "↔",
-      label: tmpLabel,
+      start: newLink.direction === "←" ? newLink.other : props.ediumId,
+      end: newLink.direction === "←" ? props.ediumId : newLink.other,
+      directed: newLink.direction !== "↔",
+      label: newLink.label,
     };
     createOneLink(postData).then(
       data => {
@@ -104,6 +68,7 @@ export const LinksDisplay: React.FC<ILinksDisplayProps> = (props) => {
   return (
     <Stack className={classes.linkList}>
       <Text variant={"large"}>Links</Text>
+      <CommandBar items={barItems} />
       {props.links.length === 0 && (
         <Text>No link to show</Text>
       )}
@@ -115,29 +80,12 @@ export const LinksDisplay: React.FC<ILinksDisplayProps> = (props) => {
           onDelete={() => sendDeleteLink(link.id)}
         />
       ))}
-      <Text variant={"large"}>New link</Text>
-      <Stack horizontal className={classes.newLinkContainer}>
-        <TextField
-          placeholder={"Link label"}
-          value={tmpLabel}
-          onChange={(ev, val) => setTmpLabel(val ?? DEFAULT_TMP_LINK.label)}
-        />
-        <Text>:</Text>
-        <DefaultButton disabled text={"This edium"} />
-        <DefaultButton
-          text={tmpDirection}
-          className={classes.arrowButton}
-          onClick={() => setTmpDirection(dir => nextArrow(dir))}
-        />
-        <Dropdown
-          options={ediaOptions}
-          placeholder={"Select an edium"}
-          selectedKey={tmpOther}
-          onChange={(ev, val) => setTmpOther(val?.key as number | undefined)}
-          className={classes.ediaDropdown}
-        />
-        <PrimaryButton text={"Add"} disabled={!isInputValid()} onClick={onNewLink} />
-      </Stack>
+      <AddLinkDialog
+        hidden={isAddDialogHidden}
+        hide={() => setIsAddDialogHidden(true)}
+        onLinkAdd={sendPostLink}
+        allEdia={props.allEdia}
+      />
     </Stack>
   );
 };
@@ -145,17 +93,5 @@ export const LinksDisplay: React.FC<ILinksDisplayProps> = (props) => {
 const classes = mergeStyleSets({
   linkList: {
     gap: 10,
-  },
-  newLinkContainer: {
-    alignItems: "center",
-    gap: 10,
-  },
-  arrowButton: {
-    fontSize: 40,
-    fontFamily: "Times New Roman",
-    paddingBottom: 6,
-  },
-  ediaDropdown: {
-    width: "100%",
   },
 });

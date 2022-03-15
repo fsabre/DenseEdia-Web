@@ -1,10 +1,11 @@
-import { mergeStyleSets, PrimaryButton, Stack, Text, TextField } from "@fluentui/react";
+import { CommandBar, ICommandBarItemProps, mergeStyleSets, Stack, Text } from "@fluentui/react";
 import React from "react";
 import { useDispatch } from "react-redux";
 
 import { createOneElement, createOneVersion, deleteOneElement } from "../api/actions";
 import { IElement, IElementPost, IVersionPost, JsonValue, ValueType } from "../api/types";
 import { errorSlice } from "../reducers/errorSlice";
+import { AddElementDialog } from "./AddElementDialog";
 import { SingleElement } from "./SingleElement";
 
 
@@ -22,14 +23,24 @@ const DEFAULT_TMP_ELEMENT: ITmpElement = {
 
 interface IElementDisplayProps {
   ediumId: number;
+  ediumKind?:string;
   elements: IElement[];
   onRefresh: () => void;
 }
 
 export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
   const [tmpElements, setTmpElements] = React.useState<ITmpElement[]>([]);
-  const [tmpElementName, setTmpElementName] = React.useState("");
+  const [isAddDialogHidden, setIsAddDialogHidden] = React.useState(true);
   const dispatch = useDispatch();
+
+  const barItems: ICommandBarItemProps[] = [
+    {
+      key: 'newElement',
+      text: 'New',
+      iconProps: {iconName: 'Add'},
+      onClick: () => setIsAddDialogHidden(false),
+    },
+  ];
 
   // Empty the tmpElements when the ediumId changes
   React.useEffect(() => {
@@ -46,24 +57,23 @@ export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
     ));
   }, [props.elements]);
 
-  // Return true is the input is empty or if the element name is already taken
-  function isAddButtonDisabled(): boolean {
-    if (tmpElementName === "") {
-      return true;
+  // Return false if the element name is empty or already taken
+  function isNewElementNameValid(elementName: string): boolean {
+    if (elementName === "") {
+      return false;
     }
-    if (props.elements.find(element => element.name === tmpElementName) !== undefined) {
-      return true;
+    if (props.elements.find(element => element.name === elementName) !== undefined) {
+      return false;
     }
-    if (tmpElements.find(tmpElement => tmpElement.name === tmpElementName) !== undefined) {
-      return true;
+    if (tmpElements.find(tmpElement => tmpElement.name === elementName) !== undefined) {
+      return false;
     }
-    return false;
+    return true;
   }
 
   // Create a new temporary element displayed along the others
-  function onNewElement(): void {
-    setTmpElements([...tmpElements, {...DEFAULT_TMP_ELEMENT, name: tmpElementName}]);
-    setTmpElementName("");
+  function onNewElement(elementName: string): void {
+    setTmpElements([...tmpElements, {...DEFAULT_TMP_ELEMENT, name: elementName}]);
   }
 
   // Create a new version for an existing element
@@ -112,7 +122,8 @@ export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
 
   return (
     <Stack className={classes.elementList}>
-      <Text variant={"large"}>Element list</Text>
+      <Text variant={"large"}>Elements</Text>
+      <CommandBar items={barItems} />
       {props.elements.length === 0 && (
         <Text>No element to show</Text>
       )}
@@ -141,20 +152,14 @@ export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
           onDelete={() => setTmpElements(tmpElements.filter(e => e.name !== tmpElement.name))}
         />
       ))}
-      {/* Display the form to add a new element */}
-      <Text variant={"large"}>New element</Text>
-      <Stack className={classes.newElementBar} horizontal>
-        <TextField
-          value={tmpElementName}
-          placeholder={"Element name"}
-          onChange={(ev, val) => setTmpElementName(val ?? "")}
-        />
-        <PrimaryButton
-          text={"Add"}
-          disabled={isAddButtonDisabled()}
-          onClick={onNewElement}
-        />
-      </Stack>
+      {/* Display the dialog to add a new element */}
+      <AddElementDialog
+        hidden={isAddDialogHidden}
+        hide={() => setIsAddDialogHidden(true)}
+        isElementNameValid={isNewElementNameValid}
+        onElementAdd={onNewElement}
+        ediumKind={props.ediumKind}
+      />
     </Stack>
   );
 };
@@ -162,10 +167,6 @@ export const ElementsDisplay: React.FC<IElementDisplayProps> = (props) => {
 const classes = mergeStyleSets({
   elementList: {
     gap: 10,
-  },
-  newElementBar: {
-    gap: 10,
-    alignItems: "flex-end",
   },
 });
 

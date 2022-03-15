@@ -58,6 +58,10 @@ export function deleteOneLink(linkId: number): Promise<ILink> {
   return safeDeleteRequest(API_URL + `/link/${linkId}`);
 }
 
+export function getMostUsedElementNames(ediumKind: string): Promise<[string, number][]> {
+  return safeGetRequest(API_URL + `/stats/most_used_elements/${ediumKind}`);
+}
+
 function safeGetRequest(url: string): Promise<any> {
   const request = fetch(url);
   return makeRequestSafe(request);
