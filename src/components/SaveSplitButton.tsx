@@ -6,6 +6,7 @@ interface ISaveSplitButtonProps {
   primaryDisabled?: boolean;
   onSave: () => void;
   menuProps?: IContextualMenuProps;
+  disabledColor?: string;
 }
 
 export const SaveSplitButton: React.FC<ISaveSplitButtonProps> = (props) => {
@@ -27,6 +28,22 @@ export const SaveSplitButton: React.FC<ISaveSplitButtonProps> = (props) => {
     };
   }, [props.menuProps]);
 
+  const saveButtonStyles: IButtonStyles = {
+    rootDisabled: {
+      backgroundColor: "white", // Remove the grey background when the save button is disabled
+    },
+    iconDisabled: {
+      color: props.disabledColor ?? "lightgrey",
+    },
+    splitButtonMenuButton: {
+      border: "none",
+      backgroundColor: "white",
+    },
+    splitButtonDivider: {
+      backgroundColor: "grey", // Add a grey bar between the save icon and the menu button
+    },
+  };
+
   return (
     <IconButton
       iconProps={{iconName: "Save"}}
@@ -39,18 +56,3 @@ export const SaveSplitButton: React.FC<ISaveSplitButtonProps> = (props) => {
   );
 };
 
-const saveButtonStyles: IButtonStyles = {
-  rootDisabled: {
-    backgroundColor: "white", // Remove the grey background when the save button is disabled
-  },
-  iconDisabled: {
-    color: "lightgrey",
-  },
-  splitButtonMenuButton: {
-    border: "none",
-    backgroundColor: "white",
-  },
-  splitButtonDivider: {
-    backgroundColor: "grey", // Add a grey bar between the save icon and the menu button
-  },
-};

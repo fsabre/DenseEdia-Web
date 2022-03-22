@@ -18,6 +18,16 @@ const TYPE_COLORS: Map<ValueType | null, string> = new Map([
 const INT_REGEX = new RegExp("^-?[0-9]+$");
 const FLOAT_REGEX = new RegExp("^-?[0-9]+(\\.[0-9]+)?$");
 
+function isValidInt(raw: string): boolean {
+  // Also test that the number is small enough not to use the scientific notation
+  return INT_REGEX.test(raw) && String(Number(raw)).indexOf("e") === -1;
+}
+
+function isValidFloat(raw: string): boolean {
+  // Also test that the number is small enough not to use the scientific notation
+  return FLOAT_REGEX.test(raw) && String(Number(raw)).indexOf("e") === -1;
+}
+
 interface ISingleElementProps {
   elementName: string;
   // The initial version type. Use null if there's no existing version.
@@ -35,8 +45,11 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
   // Temporary type for edition. ValueType or null if there's no version.
   const [tmpType, setTmpType] = React.useState<ValueType | null>(props.initialValueType);
   // Temporary value for edition. JsonValue (null | boolean | number | string) or null if there's no version.
-  const [tmpValue, setTmpValue] = React.useState<JsonValue>(props.initialValueJson);
-  const [rawNumberValue, setRawNumberValue] = React.useState(String(props.initialValueJson));
+  const [tmpTrueValue, setTmpTrueValue] = React.useState<JsonValue>(props.initialValueJson);
+  // Temporary string value for the value textfield
+  const [tmpRawValue, setTmpRawValue] = React.useState(String(props.initialValueJson));
+
+  const saveButtonState = getSaveButtonState();
 
   // Send the tmpType and the tmpValue to create the version
   function onSave(): void {
@@ -44,14 +57,14 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
       console.log("Trying to save when there's no version");
       return;
     }
-    props.onSave(tmpType, tmpValue);
+    props.onSave(tmpType, tmpTrueValue);
   }
 
   // Reset the tmpType and the tmpValue to their initial state
   function onReset(): void {
     setTmpType(props.initialValueType);
-    setTmpValue(props.initialValueJson);
-    setRawNumberValue(String(props.initialValueJson));
+    setTmpTrueValue(props.initialValueJson);
+    setTmpRawValue(String(props.initialValueJson));
   }
 
   // Change the tmpType and reset the tmpValue
@@ -59,14 +72,17 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
     setTmpType(newType);
     // For some reason, I can't do it properly with a Map<ValueType, JsonValue>.
     if (newType === "bool") {
-      setTmpValue(false);
+      setTmpTrueValue(false);
+      setTmpRawValue("");
     } else if (newType === "int" || newType === "float") {
-      setTmpValue(0);
-      setRawNumberValue("0");
+      setTmpTrueValue(0);
+      setTmpRawValue("0");
     } else if (newType === "str" || newType === "datetime") {
-      setTmpValue("");
+      setTmpTrueValue("");
+      setTmpRawValue("");
     } else {
-      setTmpValue(null);
+      setTmpTrueValue(null);
+      setTmpRawValue("");
     }
   }
 
@@ -79,21 +95,25 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
     if (tmpType === null) {
       return false;
     }
-    // The trick here is super useful.
-    // It checks that the raw is well formatted and is not too big.
-    // But it's also not consistent, it needs to be changed.
-    if (tmpType === "int" && rawNumberValue !== String(tmpValue)) {
-      return false;
+    if (tmpType === "int") {
+      return isValidInt(tmpRawValue);
     }
-    if (tmpType === "float" && rawNumberValue !== String(tmpValue)) {
-      return false;
+    if (tmpType === "float") {
+      return isValidFloat(tmpRawValue);
     }
     return true;
   }
 
-  // Return true if neither the type nor the value have changed, or if the value is not valid
-  function isSaveButtonDisabled(): boolean {
-    return (tmpType === props.initialValueType && tmpValue === props.initialValueJson) || !isValid();
+  // Return "disabled" if neither the type nor the value have changed, "error"
+  // if the value is not valid or "ok" is the remaining cases.
+  function getSaveButtonState(): "ok" | "disabled" | "error" {
+    if (!isValid()) {
+      return "error";
+    }
+    if (tmpType === props.initialValueType && tmpTrueValue === props.initialValueJson) {
+      return "disabled";
+    }
+    return "ok";
   }
 
   const typeColor = TYPE_COLORS.get(tmpType);
@@ -183,11 +203,11 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
       case "bool":
         return (
           <Toggle
-            checked={tmpValue === true} // Expect null value
+            checked={tmpTrueValue === true} // Expect null value
             onText={"True"}
             offText={"False"}
             onChange={(ev, val) => {
-              setTmpValue(val ?? false);
+              setTmpTrueValue(val ?? false);
             }}
             className={classes.boolContent}
           />
@@ -195,11 +215,12 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
       case "int":
         return (
           <TextField
-            value={rawNumberValue}
+            value={tmpRawValue}
             onChange={(ev, val) => {
-              setRawNumberValue(val ?? "");
-              if (INT_REGEX.test(val ?? "")) {
-                setTmpValue(Number(val ?? ""));
+              val = val ?? "";
+              setTmpRawValue(val);
+              if (isValidInt(val)) {
+                setTmpTrueValue(Number(val));
               }
             }}
             borderless
@@ -209,11 +230,12 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
       case "float":
         return (
           <TextField
-            value={rawNumberValue}
+            value={tmpRawValue}
             onChange={(ev, val) => {
-              setRawNumberValue(val ?? "");
-              if (FLOAT_REGEX.test(val ?? "")) {
-                setTmpValue(Number(val ?? ""));
+              val = val ?? "";
+              setTmpRawValue(val);
+              if (isValidFloat(val)) {
+                setTmpTrueValue(Number(val));
               }
             }}
             borderless
@@ -223,16 +245,16 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
       case "str":
         return (
           <TextField
-            value={String(tmpValue ?? "")} // Expect null value
+            value={String(tmpTrueValue ?? "")} // Expect null value
             onChange={(ev, val) => {
-              setTmpValue(val ?? "");
+              setTmpTrueValue(val ?? "");
             }}
             borderless
             className={classes.strContent}
           />
         );
       default:
-        return <Text>{String(tmpValue ?? "")}</Text>; // Expect null value
+        return <Text>{String(tmpTrueValue ?? "")}</Text>; // Expect null value
     }
   }
 
@@ -251,7 +273,8 @@ export const SingleElement: React.FC<ISingleElementProps> = (props) => {
         </>)}
       </Stack>
       <SaveSplitButton
-        primaryDisabled={isSaveButtonDisabled()}
+        primaryDisabled={saveButtonState !== "ok"}
+        disabledColor={saveButtonState === "error" ? "#E57373" : undefined}
         onSave={onSave}
         menuProps={saveButtonMenuProps}
       />
